@@ -2,12 +2,13 @@ var http = require('http')
   , fs   = require('fs')
   , url  = require('url')
   , path = require('path')
-  , qs = require('qs')
   , XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest
+  , trueskill = require('trueskill')
+  , later = require('later')
   , port = 8080
   
 
-
+var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
 
 var server = http.createServer (function (req, res) {
@@ -59,6 +60,8 @@ function getTournaments(tournaments) {
 //get all tournaments
 makeGet('http://api.challonge.com/v1/tournaments.json?api_key=2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8');
 
+var textSched = later.parse.text('at 12:00am every sunday');
+var timer = later.setInterval(updateRankings, textSched);
 server.listen(process.env.PORT || port);
 console.log('listening on 8080')
 
