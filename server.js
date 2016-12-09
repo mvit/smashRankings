@@ -9,6 +9,7 @@ var https = require('https')
   
 var challongeHost = 'api.challonge.com'
 var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
+var IDs = [];
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
 
 var server = http.createServer (function (req, res) {
@@ -35,6 +36,21 @@ var server = http.createServer (function (req, res) {
   }
 })
 
+function parseTournaments(tournaments)
+{
+  //console.log(tournaments);
+  for (var item = 0; item < tournaments.length; item++)
+  {
+    console.log(tournaments[item].tournament.game_name);
+    if (tournaments[item].tournament.game_name == 'Super Smash Bros. Melee')
+    {
+      IDs.push(tournaments[item].tournament.id);
+    }
+  }
+  console.log("IDs = " + IDs);
+  getParticipants(IDs);
+}
+
 function buildTournaments(response) {
   var str = '';
   console.log('building tournament')
@@ -42,8 +58,9 @@ function buildTournaments(response) {
     str += chunk;
   });
   response.on('end', function(chunk) {
-    console.log(str)
-//    console.log(JSON.parse(str))
+    //console.log(str)
+    var parsed = JSON.parse(str);
+    parseTournaments(parsed);
   });
 }
 
@@ -58,7 +75,7 @@ function getTournaments() {
 }
 
 //get all tournaments
-getTournaments()
+getTournaments();
 var textSched = later.parse.text('at 12:00am every sunday');
 var timer = later.setInterval(getTournaments, textSched);
 server.listen(process.env.PORT || port);
