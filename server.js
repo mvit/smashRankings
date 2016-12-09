@@ -3,6 +3,8 @@ var http = require('http')
   , url  = require('url')
   , path = require('path')
   , qs = require('qs')
+  , trueskill = require('trueskill'),
+  , later = require('later'),
   , port = 8080
 
 
@@ -32,6 +34,8 @@ var server = http.createServer (function (req, res) {
   }
 })
 
+var textSched = later.parse.text('at 12:00am every sunday');
+var timer = later.setInterval(updateRankings, textSched);
 server.listen(process.env.PORT || port);
 console.log('listening on 8080')
 
