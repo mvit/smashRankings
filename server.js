@@ -35,6 +35,10 @@ var server = http.createServer (function (req, res) {
   }
 })
 
+function parseTournaments(list) {
+  
+}
+
 function buildTournaments(response) {
   var str = '';
   console.log('building tournament')
@@ -42,8 +46,8 @@ function buildTournaments(response) {
     str += chunk;
   });
   response.on('end', function(chunk) {
-    console.log(str)
-//    console.log(JSON.parse(str))
+    //console.log(str)
+    parseTournaments(JSON.parse(str));
   });
 }
 
