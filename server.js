@@ -59,8 +59,7 @@ function buildTournaments(response) {
   });
   response.on('end', function(chunk) {
     //console.log(str)
-    var parsed = JSON.parse(str);
-    parseTournaments(parsed);
+    parseTournaments(JSON.parse(str));
   });
 }
 
