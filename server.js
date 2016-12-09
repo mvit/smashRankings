@@ -3,8 +3,8 @@ var http = require('http')
   , url  = require('url')
   , path = require('path')
   , qs = require('qs')
-  , trueskill = require('trueskill'),
-  , later = require('later'),
+  , trueskill = require('trueskill')
+  , later = require('later')
   , port = 8080
 
 
