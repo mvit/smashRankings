@@ -38,16 +38,6 @@
     
     makeGet('/rankings');
     
-    // onload = function() {
-    //   var ranks = document.getElementById('ranks').getElementsByTagName('tr')
-    //   console.log(ranks.length)
-    //   for (i = 0; i < ranks.length; i++) {
-    //     ranks[i].onclick = function() {
-    //       console.log(this.rowIndex);
-    //     }
-    //   }
-    // }
-    
     function makeGet(url) {
       var req = new XMLHttpRequest();
 
@@ -69,10 +59,20 @@
     
     function buildList( A ) {
       var ranks = document.getElementById('ranks');
-      ranks.innerHTML = "";
       A.forEach( function(d) {
-        console.log(A)
-        ranks.innerHTML += '<tr><th>' + d.tag + '</th></tr>';
+        console.log(d)
+        var tr = document.createElement("tr")
+        tr.onclick = function() {
+          console.log(this.rowIndex)
+        }
+        
+        tr.innerHTML += '<td>0</td>'
+        tr.innerHTML += '<td>' + d.tag + '</td>'
+        tr.innerHTML += '<td>' + d.wins + '</td>'
+        tr.innerHTML += '<td>' + d.losses + '</td>'
+        tr.innerHTML += '<td>' + d.score + '</td>'
+        tr.innerHTML += '<td>' + d.last + '</td>'
+        ranks.appendChild(tr)
       });
     }
     
