@@ -30,7 +30,7 @@
             <th>Last Match</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody id="ranks">
           <tr>
             <td> 1 </td>
             <td> ZettaVolt </td>
@@ -50,6 +50,17 @@
         </tbody>
       </table>
     </section>
+    <script>
+    onload = function() {
+      var ranks = document.getElementById('ranks').getElementsByTagName('tr')
+      console.log(ranks.length)
+      for (i = 0; i < ranks.length; i++) {
+        ranks[i].onclick = function() {
+          console.log(this.rowIndex);
+        }
+      }
+    }
+    </script>
     <footer>
       Made by Maurizio Vitale and Jon Sawin for the WPI Smash Club 
     </footer>
