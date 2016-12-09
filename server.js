@@ -7,7 +7,7 @@ var http = require('http')
   , later = require('later')
   , port = 8080
 
-
+var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
 
 var server = http.createServer (function (req, res) {
