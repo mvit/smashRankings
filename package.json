@@ -1,0 +1,12 @@
+{
+  "name": "mv-js-4241-rankings",
+  "version": "0.1.0",
+  "description": "WPI CS 4241 Smash Rankings",
+  "author": "Maurizio Vitale, Jon Sawin",
+  "private": true,
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+  }
+}

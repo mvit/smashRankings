@@ -31,35 +31,51 @@
           </tr>
         </thead>
         <tbody id="ranks">
-          <tr>
-            <td> 1 </td>
-            <td> ZettaVolt </td>
-            <td> 9999 </td>
-            <td> 0 </td>
-            <td> 1337 </td>
-            <td> idk </td>
-          </tr>
-          <tr>
-            <td> 1 </td>
-            <td> ZettaVolt </td>
-            <td> 9999 </td>
-            <td> 0 </td>
-            <td> 1337 </td>
-            <td> idk </td>
-          </tr>
         </tbody>
       </table>
     </section>
     <script>
-    onload = function() {
-      var ranks = document.getElementById('ranks').getElementsByTagName('tr')
-      console.log(ranks.length)
-      for (i = 0; i < ranks.length; i++) {
-        ranks[i].onclick = function() {
-          console.log(this.rowIndex);
-        }
+    
+    makeGet('/rankings');
+    
+    // onload = function() {
+    //   var ranks = document.getElementById('ranks').getElementsByTagName('tr')
+    //   console.log(ranks.length)
+    //   for (i = 0; i < ranks.length; i++) {
+    //     ranks[i].onclick = function() {
+    //       console.log(this.rowIndex);
+    //     }
+    //   }
+    // }
+    
+    function makeGet(url) {
+      var req = new XMLHttpRequest();
+
+      req.onreadystatechange = function() {
+        handleRes(req);
       }
+
+      req.open('GET', url);
+      req.send();
     }
+    
+    function handleRes(req) {
+      if( req.readyState !== XMLHttpRequest.DONE )
+        return;
+
+      if(req.status === 200)
+        buildList( JSON.parse(req.responseText) );
+    }
+    
+    function buildList( A ) {
+      var ranks = document.getElementById('ranks');
+      ranks.innerHTML = "";
+      A.forEach( function(d) {
+        console.log(A)
+        ranks.innerHTML += '<tr><th>' + d.tag + '</th></tr>';
+      });
+    }
+    
     </script>
     <footer>
       Made by Maurizio Vitale and Jon Sawin for the WPI Smash Club 
