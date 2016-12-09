@@ -1,13 +1,13 @@
-var http = require('http')
+var https = require('https')
   , fs   = require('fs')
   , url  = require('url')
   , path = require('path')
-  , XMLHttpRequest = require('xmlhttprequest').XMLHttpRequest
+  , http = require('http')
   , trueskill = require('trueskill')
   , later = require('later')
   , port = 8080
   
-
+var challongeHost = 'api.challonge.com'
 var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
 
@@ -35,33 +35,32 @@ var server = http.createServer (function (req, res) {
   }
 })
 
-function makeGet(url) {
-  var req = new XMLHttpRequest();
-  req.onreadystatechange = function() {
-    handleRes(req);
-  }
-  req.open('GET', url);
-  req.send;
+function buildTournaments(response) {
+  var str = '';
+  console.log('building tournament')
+  response.on('data', function (chunk) {
+    str += chunk;
+  });
+  response.on('end', function(chunk) {
+    console.log(str)
+//    console.log(JSON.parse(str))
+  });
 }
 
-function handleRes(req) {
-  if( req.readyState !== XMLHttpRequest.DONE )
-    return;
-
-  if(req.status === 200)
-    getTournaments( JSON.parse(req.responseText) );
-}
-
-function getTournaments(tournaments) {
-  //melee
-  console.log(tournaments);
+function getTournaments() {
+  var options = {
+    host: challongeHost,
+    path: '/v1/tournaments.json?api_key=' + APIKey,
+    port: '443',
+    method: 'GET'
+  };
+  https.request(options, buildTournaments).end();
 }
 
 //get all tournaments
-makeGet('http://api.challonge.com/v1/tournaments.json?api_key=2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8');
-
+getTournaments()
 var textSched = later.parse.text('at 12:00am every sunday');
-var timer = later.setInterval(updateRankings, textSched);
+var timer = later.setInterval(getTournaments, textSched);
 server.listen(process.env.PORT || port);
 console.log('listening on 8080')
 
