@@ -35,6 +35,42 @@ var server = http.createServer (function (req, res) {
       res.end('404 not found')
   }
 })
+var players = []
+
+function parseParticipants(list) {
+  console.log('parsing participants')
+  for (i = 0; i < list.length; i++) {
+    var player = {}
+    player.name = list[i].participant.name
+    player.id = list[i].participant.id
+    player.skill = [25.0, 25.0/3.0]
+    player.rank = list[i].participant.final_rank
+    players.push(player);
+  }
+  trueskill.AdjustPlayers(players)
+  console.log(players)
+}
+
+function buildParticipants(response) {
+  var str = '';
+  response.on('data', function (chunk) {
+    str += chunk;
+  });
+  response.on('end', function(chunk) {
+    //console.log(str)
+    parseParticipants(JSON.parse(str));
+  });
+}
+
+function getParticipants(tournament) {
+  var options = {
+    host: challongeHost,
+    path: '/v1/tournaments/' + tournament + '/participants.json?api_key=' + APIKey,
+    port: '443',
+    method: 'GET'
+  };
+  https.request(options, buildParticipants).end();
+}
 
 function parseTournaments(tournaments)
 {
