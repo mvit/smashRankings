@@ -48,7 +48,15 @@ function parseTournaments(tournaments)
     }
   }
   console.log("IDs = " + IDs);
-  getParticipants(IDs);
+  for (var i = 0; i < IDs.length; i++)
+  {
+    getParticipants(IDs[i]);
+  }
+}
+
+function getParticipants(num)
+{
+  console.log(num);
 }
 
 function buildTournaments(response) {
