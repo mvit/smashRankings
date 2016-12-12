@@ -8,5 +8,6 @@
     "start": "node server.js"
   },
   "dependencies": {
+    "sqlite": "^2.2.4"
   }
 }
