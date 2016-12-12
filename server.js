@@ -41,14 +41,14 @@ function parseParticipants(list) {
   console.log('parsing participants')
   for (i = 0; i < list.length; i++) {
     var player = {}
-    player.name = list[i].participant.name
-    player.id = list[i].participant.id
-    player.skill = [25.0, 25.0/3.0]
-    player.rank = list[i].participant.final_rank
-    players.push(player);
+    player.tag = list[i].participant.name
+    //player.id = list[i].participant.id
+    player.score = 25
+    //player.rank = list[i].participant.final_rank
+    rankings.push(player);
   }
-  trueskill.AdjustPlayers(players)
-  console.log(players)
+  //trueskill.AdjustPlayers(players)
+  //console.log(players)
 }
 
 function buildParticipants(response) {
@@ -57,7 +57,6 @@ function buildParticipants(response) {
     str += chunk;
   });
   response.on('end', function(chunk) {
-    //console.log(str)
     parseParticipants(JSON.parse(str));
   });
 }
@@ -88,11 +87,6 @@ function parseTournaments(tournaments)
   {
     getParticipants(IDs[i]);
   }
-}
-
-function getParticipants(num)
-{
-  console.log(num);
 }
 
 function buildTournaments(response) {

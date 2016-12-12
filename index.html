@@ -59,14 +59,15 @@
     
     function buildList( A ) {
       var ranks = document.getElementById('ranks');
+      var i = 0
       A.forEach( function(d) {
-        console.log(d)
+        i++;
         var tr = document.createElement("tr")
         tr.onclick = function() {
           console.log(this.rowIndex)
         }
         
-        tr.innerHTML += '<td>0</td>'
+        tr.innerHTML += '<td>'+i+'</td>'
         tr.innerHTML += '<td>' + d.tag + '</td>'
         tr.innerHTML += '<td>' + d.wins + '</td>'
         tr.innerHTML += '<td>' + d.losses + '</td>'
