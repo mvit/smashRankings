@@ -36,16 +36,20 @@ var server = http.createServer (function (req, res) {
   }
 })
 var players = []
+var tags=[]
+
 
 function parseParticipants(list) {
   console.log('parsing participants')
   for (i = 0; i < list.length; i++) {
-    var player = {}
-    player.tag = list[i].participant.name
-    //player.id = list[i].participant.id
-    player.score = 25
-    //player.rank = list[i].participant.final_rank
-    rankings.push(player);
+    if (tags.indexOf(list[i].participant.name) == -1) {
+      var player = {}
+      player.tag = list[i].participant.name
+      player.id = list[i].participant.id
+      player.score = 25
+      tags.push(list[i].participant.name)
+      rankings.push(player);
+    }
   }
   //trueskill.AdjustPlayers(players)
   //console.log(players)
