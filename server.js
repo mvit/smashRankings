@@ -90,12 +90,6 @@ function parseTournaments(tournaments){
   }
 }
 
-function sendRankings(res) {
-  db.all("SELECT * FROM players ORDER BY score", function(err, rows) {
-    res.end(JSON.stringify(rows))
-  })
-}
-
 function buildTournaments(response) {
   var str = '';
   response.on('data', function (chunk) {
@@ -114,6 +108,12 @@ function getTournaments() {
     method: 'GET'
   };
   https.request(options, buildTournaments).end();
+}
+
+function sendRankings(res) {
+  db.all("SELECT * FROM players ORDER BY score", function(err, rows) {
+    res.end(JSON.stringify(rows))
+  })
 }
 
 function sendFile(res, filename) {
