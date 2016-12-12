@@ -79,8 +79,11 @@ function parseTournaments(tournaments)
     console.log(tournaments[item].tournament.game_name);
     if (tournaments[item].tournament.game_name == 'Super Smash Bros. Melee')
     {
-      IDs.push(tournaments[item].tournament.id);
-    }
+      if (tournaments[item].tournament.name.toLowerCase().indexOf("singles") != -1)
+      {
+        IDs.push(tournaments[item].tournament.id);
+      }
+  }
   }
   console.log("IDs = " + IDs);
   for (var i = 0; i < IDs.length; i++)
