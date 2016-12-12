@@ -83,7 +83,7 @@ function parseTournaments(tournaments)
       {
         IDs.push(tournaments[item].tournament.id);
       }
-  }
+    }
   }
   console.log("IDs = " + IDs);
   for (var i = 0; i < IDs.length; i++)
