@@ -14,8 +14,6 @@ var IDs = [];
 var players = []
 var tags=[]
 var cnt=0;
-  var rankings = []
-
 
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
@@ -95,10 +93,9 @@ function parseTournaments(tournaments){
 }
 
 function sendRankings(res) {
-  db.all("SELECT * FROM players", function(err, rows) {
+  db.all("SELECT * FROM players ORDER BY score", function(err, rows) {
     res.end(JSON.stringify(rows))
   })
-  console.log(rankings)
 }
 
 function buildTournaments(response) {
