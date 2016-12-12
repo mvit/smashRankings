@@ -6,7 +6,7 @@ var https = require('https')
   , trueskill = require('trueskill')
   , later = require('later')
   , port = 8080
-  , sqlite3 = require('sqlite3')
+  , sqlite3 = require('sqlite3').verbose()
   
 var challongeHost = 'api.challonge.com'
 var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
@@ -14,8 +14,6 @@ var IDs = [];
 var players = []
 var tags=[]
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
-
-var db = new sqlite3.Database(':memory:')
 
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
@@ -118,6 +116,17 @@ function getTournaments() {
   };
   https.request(options, buildTournaments).end();
 }
+
+//Build the database
+var file = "ranks.db"
+var exists = fs.existsSync(file)
+
+if (!exists) {
+  console.log("Creating database")
+  fs.openSync(file, "w")
+}
+
+var db = new sqlite3.Database(file);
 
 //get all tournaments
 getTournaments();
