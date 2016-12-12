@@ -60,6 +60,7 @@
     function buildList( A ) {
       var ranks = document.getElementById('ranks');
       var i = 0
+      console.log(A)
       A.forEach( function(d) {
         i++;
         var tr = document.createElement("tr")
@@ -69,8 +70,8 @@
         
         tr.innerHTML += '<td>'+i+'</td>'
         tr.innerHTML += '<td>' + d.tag + '</td>'
-        tr.innerHTML += '<td>' + d.wins + '</td>'
-        tr.innerHTML += '<td>' + d.losses + '</td>'
+        tr.innerHTML += '<td>' + d.win + '</td>'
+        tr.innerHTML += '<td>' + d.loss + '</td>'
         tr.innerHTML += '<td>' + d.score + '</td>'
         tr.innerHTML += '<td>' + d.last + '</td>'
         ranks.appendChild(tr)

@@ -13,7 +13,9 @@ var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
 var IDs = [];
 var players = []
 var tags=[]
-var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
+var cnt=0;
+  var rankings = []
+
 
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
@@ -32,7 +34,7 @@ var server = http.createServer (function (req, res) {
       sendFile(res, 'player.html')
       break
     case '/rankings':
-      res.end(JSON.stringify(rankings))
+      sendRankings(res)
       break
     default:
       res.end('404 not found')
@@ -40,15 +42,12 @@ var server = http.createServer (function (req, res) {
 })
 
 function parseParticipants(list) {
-  console.log('parsing participants')
+  //console.log('parsing participants')
   for (i = 0; i < list.length; i++) {
     if (tags.indexOf(list[i].participant.name) == -1) {
-      var player = {}
-      player.tag = list[i].participant.name
-      player.id = list[i].participant.id
-      player.score = 25
+      db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?)",cnt, list[i].participant.name, 100, 0, 9999);
+      cnt++;
       tags.push(list[i].participant.name)
-      rankings.push(player);
     }
   }
   //trueskill.AdjustPlayers(players)
@@ -79,7 +78,7 @@ function parseTournaments(tournaments){
   //console.log(tournaments);
   for (var item = 0; item < tournaments.length; item++)
   {
-    console.log(tournaments[item].tournament.game_name);
+    //console.log(tournaments[item].tournament.game_name);
     if (tournaments[item].tournament.game_name == 'Super Smash Bros. Melee')
     {
       if (tournaments[item].tournament.name.toLowerCase().indexOf("singles") != -1)
@@ -88,16 +87,23 @@ function parseTournaments(tournaments){
       }
     }
   }
-  console.log("IDs = " + IDs);
+  //console.log("IDs = " + IDs);
   for (var i = 0; i < IDs.length; i++)
   {
     getParticipants(IDs[i]);
   }
 }
 
+function sendRankings(res) {
+  db.all("SELECT * FROM players", function(err, rows) {
+    res.end(JSON.stringify(rows))
+  })
+  console.log(rankings)
+}
+
 function buildTournaments(response) {
   var str = '';
-  console.log('building tournament')
+  //console.log('building tournament')
   response.on('data', function (chunk) {
     str += chunk;
   });
@@ -125,11 +131,33 @@ if (!exists) {
   console.log("Creating database")
   fs.openSync(file, "w")
 }
-
 var db = new sqlite3.Database(file);
 
+if (!exists) {
+  db.serialize(function() {
+    console.log("I'm in me mum's car")
+      db.run("CREATE TABLE players (\
+      id INTEGER NOT NULL, \
+      tag TEXT(50) NOT NULL, \
+      win INTEGER(4), \
+      loss INTEGER(4),\
+      score INTEGER(4),\
+      PRIMARY KEY(id))")
+
+      db.run("CREATE TABLE matches(\
+        id INT NOT NULL, \
+        p1_id TEXT(50) NOT NULL, \
+        p2_id int(4), \
+        p1_score INT(4),\
+        p2_score INT(4),\
+        t_id int(4),\
+        PRIMARY KEY(id))")
+  })
+  getTournaments();
+  
+}
+
 //get all tournaments
-getTournaments();
 var textSched = later.parse.text('at 12:00am every sunday');
 var timer = later.setInterval(getTournaments, textSched);
 server.listen(process.env.PORT || port);
