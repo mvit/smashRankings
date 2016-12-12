@@ -6,11 +6,16 @@ var https = require('https')
   , trueskill = require('trueskill')
   , later = require('later')
   , port = 8080
+  , sqlite3 = require('sqlite3')
   
 var challongeHost = 'api.challonge.com'
 var APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
 var IDs = [];
+var players = []
+var tags=[]
 var rankings = [{"tag" : "ZettaVolt", "wins": "9999", "losses": "0", "score": "1337", "last":"Dec. 7, 2016"},{"tag" : "Tessa", "wins": "0", "losses": "9999", "score": "last lmao", "last":"Dec. 7, 2016"}]
+
+var db = new sqlite3.Database(':memory:')
 
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
@@ -35,9 +40,6 @@ var server = http.createServer (function (req, res) {
       res.end('404 not found')
   }
 })
-var players = []
-var tags=[]
-
 
 function parseParticipants(list) {
   console.log('parsing participants')
@@ -75,8 +77,7 @@ function getParticipants(tournament) {
   https.request(options, buildParticipants).end();
 }
 
-function parseTournaments(tournaments)
-{
+function parseTournaments(tournaments){
   //console.log(tournaments);
   for (var item = 0; item < tournaments.length; item++)
   {
