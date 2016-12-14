@@ -5,6 +5,7 @@ var https = require('https')
   , http = require('http')
   , trueskill = require('trueskill')
   , later = require('later')
+  , uuidV4 = require('uuid/v4')
   , sqlite3 = require('sqlite3').verbose()
 
 var challongeHost = 'api.challonge.com'
@@ -13,10 +14,11 @@ var challongeHost = 'api.challonge.com'
   , file = "ranks.db"
 
 var IDs = []
-  , tags=[]
+  , players = {}
 
-var cnt=0;
-
+var cnt = 0;
+var cnt2 = 0;
+var curtournament = 0;
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
 
@@ -43,13 +45,46 @@ var server = http.createServer (function (req, res) {
 
 //SubRoutines
 
-function parseParticipants(list) {
+function parseMatches(list) {
   for (i = 0; i < list.length; i++) {
-    if (tags.indexOf(list[i].participant.name) == -1) {
-      db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?)",cnt, list[i].participant.name, 100, 0, 9999);
-      cnt++;
-      tags.push(list[i].participant.name)
-    }
+    scores = list[i].match.scores_csv.split(',')
+    console.log(list[i].match.player1_id + ',' + players[list[i].match.player1_id])
+    var p1 = players[list[i].match.player1_id]
+    var p2 = players[list[i].match.player2_id]
+    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], curtournament);
+    console.log('added')
+  }
+}
+
+function buildMatches(response) {
+  var str = '';  
+  response.on('data', function (chunk) {
+    str += chunk;
+  });
+  response.on('end', function(chunk) {
+    parseMatches(JSON.parse(str));
+  });
+}
+
+function getMatches(tournament) {
+  curtournament = tournament;
+  var options = {
+    host: challongeHost,
+    path: '/v1/tournaments/' + tournament + '/matches.json?api_key=' + APIKey,
+    port: '443',
+    method: 'GET'
+  };
+  https.request(options, buildMatches).end()
+}
+
+function parseParticipants(list) {
+  players = {}
+  for (i = 0; i < list.length; i++) {
+    var id = uuidV4();
+    players[list[i].participant.id] = id;
+    console.log(list[i].participant.id + ',' + list[i].participant.name)
+    db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?)", id, list[i].participant.name, 0, 0, 0);
+    //tags.push(list[i].participant.name)
   }
 }
 
@@ -89,6 +124,7 @@ function parseTournaments(tournaments){
   //populate match data here
   {
     getParticipants(IDs[i]);
+    getMatches(IDs[i]);
   }
 }
 
@@ -110,6 +146,10 @@ function getTournaments() {
     method: 'GET'
   };
   https.request(options, buildTournaments).end();
+}
+
+function sendPlayer(req, res) {
+  
 }
 
 function sendRankings(res) {
@@ -140,7 +180,7 @@ if (!exists) {
   db.serialize(function() {
     console.log("I'm in me mum's car")
       db.run("CREATE TABLE players (\
-        id INTEGER NOT NULL, \
+        id TEXT NOT NULL, \
         tag TEXT(50) NOT NULL, \
         win INTEGER(4), \
         loss INTEGER(4),\
@@ -148,9 +188,9 @@ if (!exists) {
         PRIMARY KEY(id))")
 
       db.run("CREATE TABLE matches(\
-        id INT NOT NULL, \
-        p1_id TEXT(50) NOT NULL, \
-        p2_id int(4), \
+        id TEXT NOT NULL, \
+        p1_id TEXT NOT NULL, \
+        p2_id TEXT NOT NULL, \
         p1_score INT(4),\
         p2_score INT(4),\
         t_id int(4),\

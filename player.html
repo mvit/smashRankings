@@ -16,48 +16,38 @@
     </section>
     <section class="content">
       <header>
-        <h1 id="title"> ZettaVolt </h1>
+        <h1 id="title">  </h1>
         <nav>
           <a href=""> Melee</a>
           <a href="">Smash 4</a>
         </nav>
       </header>
       <section class="chart">
-        <img src="http://www.excel-easy.com/ogi/examples/line-chart.png" style="float: right;"\>
+        <svg id="chart" style="float: right;"\>
         <p><span class="big">1 </span>CURRENT RANKING <br></p>
         <p><span class="big">1 </span>AVERAGE RANKING <br></p>
       </section>
     </section>
     <section class="content">
-      <h3> Ranking History </h3>
+      <h3> Match History </h3>
       <table>
         <thead>
           <tr>
-            <th>Rank</th>
-            <th>Wins</th>
-            <th>Losses</th>
-            <th>Score</th>
-            <th>Month</th>
+            <th>Tag 1</th>
+            <th>Score 1</th>
+            <th>Tag 2</th>
+            <th>Score 2 </th>
+            <th>Day</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td> 1 </td>
-            <td> ZettaVolt </td>
-            <td> 9999 </td>
-            <td> 0 </td>
-            <td> 1337 </td>
-          </tr>
-          <tr>
-            <td> 1 </td>
-            <td> ZettaVolt </td>
-            <td> 9999 </td>
-            <td> 0 </td>
-            <td> 1337 </td>
-          </tr>
+        <tbody id="match">
         </tbody>
       </table>
     </section>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+      var chart = d3.select("chart").style("background-color", "black")
+    </script>
     <footer>
       Made by Maurizio Vitale and Jon Sawin for the WPI Smash Club 
     </footer>
