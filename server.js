@@ -31,9 +31,9 @@ var server = http.createServer (function (req, res) {
       sendFile(res, 'style.css')
       break
     case '/player.html':
-      sendPlayer(req, res)
+      sendFile(res, 'player.html')
       break
-    case '/player':
+    case '/players':
       sendPlayer(res, req)
       break
     case '/rankings':
@@ -168,12 +168,15 @@ function getTournaments() {
 }
 
 function sendPlayer(res, req) {
-  uri = url.parse(req.url)
-  queryresults = uri.split("=")
+  var uri = url.parse(req.url)
+  queryresults = uri.query.split("=")
   playerid=queryresults[1]
-  playerstats = db.all('SELECT * FROM players WHERE ID=?', playerid)
-  res.end(json.stringify(playerstats))
-  console.log(json.stringify(playerstats))
+  db.get('SELECT * FROM players WHERE id=?', playerid, function(err, row) {
+      console.log(row)
+      console.log(JSON.stringify(row))
+      res.end(JSON.stringify(row))
+  })
+
 }
 
 function sendRankings(res) {
@@ -183,7 +186,6 @@ function sendRankings(res) {
 }
 
 function sendFile(res, filename) {
-
   fs.readFile(filename, function(error, content) {
     res.writeHead(200, {'Content-type': 'text/html'})
     res.end(content, 'utf-8')

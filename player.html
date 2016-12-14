@@ -44,15 +44,17 @@
         </tbody>
       </table>
     </section>
-    <div id=asdf>
+    <div id=asdf style='text-align: center;'>
     </div>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script>
 
 
-      var url = window.location.pathname
-      var getQuery = url.split('?')[1]
-      makeGet('/players?' + getQuery);
+      var getQuery = window.location.search
+      //console.log(url)
+      //var getQuery = url.split('?')[1]
+      console.log(getQuery)
+      makeGet('/players' + getQuery);
 
       function makeGet(url) {
         var req = new XMLHttpRequest();
@@ -70,12 +72,13 @@
           return;
 
         if(req.status === 200)
+          console.log(req.responseText)
           populateFields( JSON.parse(req.responseText) );
       }     
 
       function populateFields(playerinfo){
-        el = document.getElementByID('asdf');
-        el.innerHTML('<p>' + playerinfo + '</p>')
+        el = document.getElementById('asdf');
+        el.innerHTML = '<p>' + JSON.stringify(playerinfo) + '</p>'
       }
 
       var chart = d3.select("chart").style("background-color", "black")

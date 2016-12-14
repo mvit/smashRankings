@@ -65,8 +65,9 @@
         i++;
         var tr = document.createElement("tr")
         tr.onclick = function() {
-          makeGet('/player')
           console.log(this.rowIndex)
+          document.location = "player.html?id=" + d.id
+          //TODO change rowIndex to player id
         }
         
         tr.innerHTML += '<td>'+i+'</td>'
