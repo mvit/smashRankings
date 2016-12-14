@@ -85,6 +85,8 @@ function parseTournaments(tournaments){
     }
   }
   for (var i = 0; i < IDs.length; i++)
+  //call get matches here after get participants, use players dictionary from getparticipants to bind ids to names
+  //populate match data here
   {
     getParticipants(IDs[i]);
   }
