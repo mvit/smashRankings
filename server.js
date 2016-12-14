@@ -1,21 +1,21 @@
 var https = require('https')
-  , request = require('then-request')
-  , fs   = require('fs')
-  , url  = require('url')
-  , path = require('path')
-  , http = require('http')
-  , trueskill = require('trueskill')
-  , later = require('later')
-  , uuidV4 = require('uuid/v4')
-  , sqlite3 = require('sqlite3').verbose()
+, request = require('then-request')
+, fs   = require('fs')
+, url  = require('url')
+, path = require('path')
+, http = require('http')
+, trueskill = require('trueskill')
+, later = require('later')
+, uuidV4 = require('uuid/v4')
+, sqlite3 = require('sqlite3').verbose()
 
 var challongeHost = 'api.challonge.com'
-  , APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
-  , port = 8080
-  , file = "ranks.db"
+, APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
+, port = 8080
+, file = "ranks.db"
 
 var IDs = []
-  , players = {}
+, players = {}
   
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
@@ -47,15 +47,13 @@ var server = http.createServer (function (req, res) {
 //SubRoutines
 
 function doTrueskill() {
-  db.serialize(function() {
-    db.each("SELECT * FROM matches", function(err, row) {
+  db.each("SELECT * FROM matches", function(err, row) {
+    //console.log(row)
+    db.serialize( function() {
+      //console.log(row.p1_id)
       var p1 = {};
       var p2 = {};
-      
-      db.each("SELECT score, sigscore FROM players WHERE id = (?)", row.p1_id), function (err, row1) {
-        console.log(row1)
-      }
-      
+
       p1.rank = 1;
       p2.rank = 2;
 
@@ -63,6 +61,20 @@ function doTrueskill() {
         p1.rank = 2;
         p2.rank = 1;
       }
+      
+      db.serialize(function() {
+        db.get("SELECT * FROM players WHERE id = ?", row.p1_id, function (err, row1) {
+          p1.skill = [row1.score, row1.sigscore]
+          db.get("SELECT * FROM players WHERE id = ?", row.p2_id, function (err, row2) {
+            p2.skill = [row2.score, row2.sigscore]
+            trueskill.AdjustPlayers([p1,p2])
+            db.serialize(function() {
+              db.run("UPDATE players set score=?, sigscore=? where id=?", p1.skill[0], p1.skill[1], row.p1_id)
+              db.run("UPDATE players set score=?, sigscore=? where id=?", p2.skill[0], p2.skill[1], row.p2_id)
+            })
+          })
+        })
+      })
 
     })
   })
@@ -105,7 +117,7 @@ function parseParticipants(list) {
   for (i = 0; i < list.length; i++) {
     var id = uuidV4();
     players[list[i].participant.id] = id;
-    console.log(list[i].participant.id + ',' + id)
+    //console.log(list[i].participant.id + ',' + id)
     db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?)", id, list[i].participant.name, 0, 0, 25.0, 25.0/3.0);
   }
 }
@@ -127,8 +139,6 @@ function getParticipants() {
     port: '443',
     method: 'GET'
   };
-  console.log(IDs[0])
-  console.log('let\'s a go')
   https.get(options, buildParticipants).end();
 }
 
@@ -176,11 +186,10 @@ function sendPlayer(res, req) {
       console.log(JSON.stringify(row))
       res.end(JSON.stringify(row))
   })
-
 }
 
 function sendRankings(res) {
-  db.all("SELECT * FROM players ORDER BY score", function(err, rows) {
+  db.all("SELECT * FROM players ORDER BY score DESC", function(err, rows) {
     res.end(JSON.stringify(rows))
   })
 }
@@ -204,14 +213,14 @@ var db = new sqlite3.Database(file);
 
 if (!exists) {
   db.serialize(function() {
-      db.run("CREATE TABLE players (\
-        id TEXT NOT NULL, \
-        tag TEXT(50) NOT NULL, \
-        win INTEGER(4), \
-        loss INTEGER(4),\
-        score REAL,\
-        sigscore REAL,\
-        PRIMARY KEY(id))")
+    db.run("CREATE TABLE players (\
+      id TEXT NOT NULL, \
+      tag TEXT(50) NOT NULL, \
+      win INTEGER(4), \
+      loss INTEGER(4),\
+      score REAL,\
+      sigscore REAL,\
+      PRIMARY KEY(id))")
 
       db.run("CREATE TABLE matches(\
         id TEXT NOT NULL, \
@@ -221,15 +230,15 @@ if (!exists) {
         p2_score INT(4),\
         t_id int(4),\
         PRIMARY KEY(id))")
-  })
+      })
 
-  //get all tournaments
-  getTournaments();
+      //get all tournaments
+      getTournaments();
 
-}
+    }
 
-//Schedule next server stuff
-var textSched = later.parse.text('at 12:00am every sunday');
-var timer = later.setInterval(getTournaments, textSched);
-server.listen(process.env.PORT || port);
-console.log('listening on 8080')
+    //Schedule next server stuff
+    var textSched = later.parse.text('at 12:00am every sunday');
+    var timer = later.setInterval(getTournaments, textSched);
+    server.listen(process.env.PORT || port);
+    console.log('listening on 8080')
