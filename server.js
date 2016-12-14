@@ -33,6 +33,9 @@ var server = http.createServer (function (req, res) {
     case '/player.html':
       sendPlayer(req, res)
       break
+    case '/player':
+      sendPlayer(res, req)
+      break
     case '/rankings':
       sendRankings(res)
       break
@@ -75,7 +78,7 @@ function parseMatches(list) {
   }
   //now do trueskill stuff
   doTrueskill();
-}
+} 
 
 function buildMatches(response) {
   var str = '';  
@@ -164,8 +167,13 @@ function getTournaments() {
   https.get(options, buildTournaments);
 }
 
-function sendPlayer(req, res) {
-  
+function sendPlayer(res, req) {
+  uri = url.parse(req.url)
+  queryresults = uri.split("=")
+  playerid=queryresults[1]
+  playerstats = db.all('SELECT * FROM players WHERE ID=?', playerid)
+  res.end(json.stringify(playerstats))
+  console.log(json.stringify(playerstats))
 }
 
 function sendRankings(res) {

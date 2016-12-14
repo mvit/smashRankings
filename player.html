@@ -44,9 +44,43 @@
         </tbody>
       </table>
     </section>
+    <div id=asdf>
+    </div>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script>
+
+
+      var url = window.location.pathname
+      var getQuery = url.split('?')[1]
+      makeGet('/players?' + getQuery);
+
+      function makeGet(url) {
+        var req = new XMLHttpRequest();
+
+        req.onreadystatechange = function() {
+            handleRes(req);           
+          }
+        }
+
+        req.open('GET', url);
+        req.send();
+      }
+      
+      function handleRes(req) {
+        if( req.readyState !== XMLHttpRequest.DONE )
+          return;
+
+        if(req.status === 200)
+          populateFields( JSON.parse(req.responseText) );
+      }     
+
+      function populateFields(playerinfo){
+        el = document.getElementByID('asdf');
+        el.innerHTML('<p>' + playerinfo + '</p>')
+      }
+
       var chart = d3.select("chart").style("background-color", "black")
+
     </script>
     <footer>
       Made by Maurizio Vitale and Jon Sawin for the WPI Smash Club 
