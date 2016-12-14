@@ -1,4 +1,5 @@
 var https = require('https')
+  , request = require('then-request')
   , fs   = require('fs')
   , url  = require('url')
   , path = require('path')
@@ -15,10 +16,7 @@ var challongeHost = 'api.challonge.com'
 
 var IDs = []
   , players = {}
-
-var cnt = 0;
-var cnt2 = 0;
-var curtournament = 0;
+  
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
 
@@ -33,7 +31,7 @@ var server = http.createServer (function (req, res) {
       sendFile(res, 'style.css')
       break
     case '/player.html':
-      sendFile(res, 'player.html')
+      sendPlayer(req, res)
       break
     case '/rankings':
       sendRankings(res)
@@ -45,15 +43,38 @@ var server = http.createServer (function (req, res) {
 
 //SubRoutines
 
+function doTrueskill() {
+  db.serialize(function() {
+    db.each("SELECT * FROM matches", function(err, row) {
+      var p1 = {};
+      var p2 = {};
+      
+      db.each("SELECT score, sigscore FROM players WHERE id = (?)", row.p1_id), function (err, row1) {
+        console.log(row1)
+      }
+      
+      p1.rank = 1;
+      p2.rank = 2;
+
+      if (row.p2_score > row.p1_score) {
+        p1.rank = 2;
+        p2.rank = 1;
+      }
+
+    })
+  })
+}
+
 function parseMatches(list) {
+  //console.log(players)
   for (i = 0; i < list.length; i++) {
-    scores = list[i].match.scores_csv.split(',')
-    console.log(list[i].match.player1_id + ',' + players[list[i].match.player1_id])
+    scores = list[i].match.scores_csv.split('-')
     var p1 = players[list[i].match.player1_id]
     var p2 = players[list[i].match.player2_id]
-    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], curtournament);
-    console.log('added')
+    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], IDs[0]);
   }
+  //now do trueskill stuff
+  doTrueskill();
 }
 
 function buildMatches(response) {
@@ -66,15 +87,14 @@ function buildMatches(response) {
   });
 }
 
-function getMatches(tournament) {
-  curtournament = tournament;
+function getMatches() {
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + tournament + '/matches.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + IDs[0] + '/matches.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
-  https.request(options, buildMatches).end()
+  https.get(options, buildMatches)
 }
 
 function parseParticipants(list) {
@@ -82,9 +102,8 @@ function parseParticipants(list) {
   for (i = 0; i < list.length; i++) {
     var id = uuidV4();
     players[list[i].participant.id] = id;
-    console.log(list[i].participant.id + ',' + list[i].participant.name)
-    db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?)", id, list[i].participant.name, 0, 0, 0);
-    //tags.push(list[i].participant.name)
+    console.log(list[i].participant.id + ',' + id)
+    db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?)", id, list[i].participant.name, 0, 0, 25.0, 25.0/3.0);
   }
 }
 
@@ -98,14 +117,16 @@ function buildParticipants(response) {
   });
 }
 
-function getParticipants(tournament) {
+function getParticipants() {
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + tournament + '/participants.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + IDs[0] + '/participants.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
-  https.request(options, buildParticipants).end();
+  console.log(IDs[0])
+  console.log('let\'s a go')
+  https.get(options, buildParticipants).end();
 }
 
 function parseTournaments(tournaments){
@@ -119,13 +140,8 @@ function parseTournaments(tournaments){
       }
     }
   }
-  for (var i = 0; i < IDs.length; i++)
-  //call get matches here after get participants, use players dictionary from getparticipants to bind ids to names
-  //populate match data here
-  {
-    getParticipants(IDs[i]);
-    getMatches(IDs[i]);
-  }
+  getParticipants();
+  getMatches();
 }
 
 function buildTournaments(response) {
@@ -145,7 +161,7 @@ function getTournaments() {
     port: '443',
     method: 'GET'
   };
-  https.request(options, buildTournaments).end();
+  https.get(options, buildTournaments);
 }
 
 function sendPlayer(req, res) {
@@ -178,13 +194,13 @@ var db = new sqlite3.Database(file);
 
 if (!exists) {
   db.serialize(function() {
-    console.log("I'm in me mum's car")
       db.run("CREATE TABLE players (\
         id TEXT NOT NULL, \
         tag TEXT(50) NOT NULL, \
         win INTEGER(4), \
         loss INTEGER(4),\
-        score INTEGER(4),\
+        score REAL,\
+        sigscore REAL,\
         PRIMARY KEY(id))")
 
       db.run("CREATE TABLE matches(\
