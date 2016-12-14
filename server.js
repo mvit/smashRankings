@@ -35,6 +35,9 @@ var server = http.createServer (function (req, res) {
     case '/player.html':
       sendFile(res, 'player.html')
       break
+    case '/player':
+      sendPlayer(res, req)
+      break
     case '/rankings':
       sendRankings(res)
       break
@@ -51,10 +54,10 @@ function parseMatches(list) {
     console.log(list[i].match.player1_id + ',' + players[list[i].match.player1_id])
     var p1 = players[list[i].match.player1_id]
     var p2 = players[list[i].match.player2_id]
-    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], curtournament);
+    //db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], curtournament);
     console.log('added')
   }
-}
+} 
 
 function buildMatches(response) {
   var str = '';  
@@ -148,8 +151,13 @@ function getTournaments() {
   https.request(options, buildTournaments).end();
 }
 
-function sendPlayer(req, res) {
-  
+function sendPlayer(res, req) {
+  uri = url.parse(req.url)
+  queryresults = uri.split("=")
+  playerid=queryresults[1]
+  playerstats = db.all('SELECT * FROM players WHERE ID=?', playerid)
+  res.end(json.stringify(playerstats))
+  console.log(json.stringify(playerstats))
 }
 
 function sendRankings(res) {
