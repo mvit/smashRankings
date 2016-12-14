@@ -17,15 +17,12 @@
     <section class="content">
       <header>
         <h1 id="title">  </h1>
-        <nav>
-          <a href=""> Melee</a>
-          <a href="">Smash 4</a>
-        </nav>
       </header>
       <section class="chart">
         <svg id="chart" style="float: right;"\>
-        <p><span class="big">1 </span>CURRENT RANKING <br></p>
-        <p><span class="big">1 </span>AVERAGE RANKING <br></p>
+        <p><span id=score class="big"> </span> - Score <br></p>
+        <p><span id=wins class="big"> </span> - Total Wins <br></p>
+        <p><span id=losses class="big"> </span> - Total Losses <br></p>
       </section>
     </section>
     <section class="content">
@@ -77,8 +74,17 @@
       }     
 
       function populateFields(playerinfo){
-        el = document.getElementById('asdf');
-        el.innerHTML = '<p>' + JSON.stringify(playerinfo) + '</p>'
+        el = document.getElementById('title');
+        el.innerHTML = playerinfo.tag
+
+        el = document.getElementById('score');
+        el.innerHTML = playerinfo.score
+
+        el = document.getElementById('wins');
+        el.innerHTML = playerinfo.win
+
+        el = document.getElementById('losses');
+        el.innerHTML = playerinfo.loss
       }
 
       var chart = d3.select("chart").style("background-color", "black")
