@@ -45,27 +45,8 @@
     </div>
     <script src="//d3js.org/d3.v3.min.js"></script>
     <script>
-    
-    function makeGet(url) {
-      var req = new XMLHttpRequest();
 
-      req.onreadystatechange = function() {
-          handleRes(req);           
-        }
-
-      req.open('GET', url);
-      req.send();
-    }
-    
-    function handleRes(req) {
-      if( req.readyState !== XMLHttpRequest.DONE )
-        return;
-
-      if(req.status === 200)
-        buildList( JSON.parse(req.responseText) );
-    }
-
-    function buildList( A ) {
+    function buildMatch( A ) {
       var ranks = document.getElementById('match');
       var i = 0
       console.log(A)
@@ -82,7 +63,6 @@
 
       function updateTable(data)
       {
-        
         var x = d3.scale.linear()
             .domain([0, d3.max(data)])
             .range([0, 600]);
@@ -93,7 +73,6 @@
           .enter().append("div")
             .style("width", function(d) { return x(d) + "px"; })
             .text(function(d) { return d; }); 
-
       }
 
       var getQuery = window.location.search
@@ -101,6 +80,7 @@
       //var getQuery = url.split('?')[1]
       console.log(getQuery)
       makeGet('/players' + getQuery);
+      makeMatch('/matches' + getQuery);
       
       function makeGet(url) {
         var req = new XMLHttpRequest();
@@ -113,6 +93,26 @@
         req.send();
       }
       
+      function makeMatch(url) {
+        var req = new XMLHttpRequest();
+
+        req.onreadystatechange = function() {
+            handleResMatch(req);           
+          }
+
+        req.open('GET', url);
+        req.send();
+      }
+      
+      function handleResMatch(req) {
+        if( req.readyState !== XMLHttpRequest.DONE )
+          return;
+
+        if(req.status === 200)
+          console.log(req.responseText)
+          buildMatch( JSON.parse(req.responseText));
+      }     
+
       function handleRes(req) {
         if( req.readyState !== XMLHttpRequest.DONE )
           return;

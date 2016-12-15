@@ -33,9 +33,9 @@ var server = http.createServer (function (req, res) {
   case '/player.html':
     sendFile(res, 'player.html')
     break
-  // case '/matches':
-  //   sendMatches(res, req)
-  //   break
+  case '/matches':
+    sendMatches(res, req)
+    break
   case '/players':
     sendPlayer(res, req)
     break
@@ -209,8 +209,6 @@ function sendPlayer(res, req) {
   queryresults = uri.query.split("=")
   playerid=queryresults[1]
   db.get('SELECT * FROM players WHERE id=?', playerid, function(err, row) {
-    console.log(row)
-    console.log(JSON.stringify(row))
     res.end(JSON.stringify(row))
   })
 }
@@ -221,14 +219,15 @@ function sendRankings(res) {
   })
 }
 
-// function sendMatches(res, req) {
-//   var uri = url.parse(req.url)
-//   queryresults = uri.query.split("=")
-//   playerid=queryresults[1]
-//   db.all("SELECT * FROM matches WHERE p1_id = ?", playerid, function(err, rows) {
-//     res.end(JSON.stringify(rows))
-//   })
-// }
+function sendMatches(res, req) {
+  var uri = url.parse(req.url)
+  queryresults = uri.query.split("=")
+  playerid=queryresults[1]
+  db.all("SELECT * FROM matches WHERE p1_id = ?"
+  , playerid, function(err, rows) {
+    matches = JSON.stringify(rows)
+  })
+}
 
 function sendFile(res, filename) {
   fs.readFile(filename, function(error, content) {
