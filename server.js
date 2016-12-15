@@ -229,9 +229,10 @@ function sendMatches(res, req) {
   var uri = url.parse(req.url)
   queryresults = uri.query.split("=")
   playerid=queryresults[1]
-  db.all("SELECT * FROM matches WHERE p1_id = ?"
-  , playerid, function(err, rows) {
-    res.end(JSON.stringify(rows))
+  db.all("SELECT * FROM matches WHERE p1_id = ? OR p2_id = ?"
+  , playerid, playerid, function(err, rows) {
+    matches = JSON.stringify(rows)
+    res.end(matches)
   })
 }
 
