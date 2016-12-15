@@ -16,13 +16,13 @@
     </section>
     <section class="content">
       <header>
-        <h1 id="title">  </h1>
+        <h1 id="title"> Tag: </h1>
+        <p id="score"> Score: </p>
       </header>
       <section>
         <div class="chart"> </div>
-        <p><span id=score class="big"> </span> - Score <br></p>
-        <p><span id=wins class="big"> </span> - Total Wins <br></p>
-        <p><span id=losses class="big"> </span> - Total Losses <br></p>
+        <p><span id=wins class="big">Total Wins - </span><br></p>
+        <p><span id=losses class="big">Total Losses -  </span> <br></p>
       </section>
     </section>
     <section class="content">
@@ -45,8 +45,6 @@
     </div>
     <script src="//d3js.org/d3.v3.min.js"></script>
     <script>
-
-    makeGet('/matches');
     
     function makeGet(url) {
       var req = new XMLHttpRequest();
@@ -82,8 +80,6 @@
       });
     }
 
-      var data = [8,9]
-      updateTable(data)
       function updateTable(data)
       {
         
@@ -105,7 +101,7 @@
       //var getQuery = url.split('?')[1]
       console.log(getQuery)
       makeGet('/players' + getQuery);
-
+      
       function makeGet(url) {
         var req = new XMLHttpRequest();
 
@@ -128,16 +124,16 @@
 
       function populateFields(playerinfo){
         el = document.getElementById('title');
-        el.innerHTML = playerinfo.tag
+        el.innerHTML += playerinfo.tag
 
         el = document.getElementById('score');
-        el.innerHTML = playerinfo.score
+        el.innerHTML += playerinfo.score
 
         el = document.getElementById('wins');
-        el.innerHTML = playerinfo.win
+        el.innerHTML += playerinfo.win
 
         el = document.getElementById('losses');
-        el.innerHTML = playerinfo.loss
+        el.innerHTML += playerinfo.loss
 
         updateTable([playerinfo.win, playerinfo.loss]);
       }      
