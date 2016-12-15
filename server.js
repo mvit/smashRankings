@@ -99,7 +99,7 @@ function loadNextMatch(list, cnt) {
 function loadMatches(tournament) {
   db.all("SELECT * FROM matches WHERE t_id = ?"
   , tournament, function(err, rows) {
-    console.log(rows)
+    console.log(rows.length)
     loadNextMatch(rows, 0)
   })
 }
@@ -114,6 +114,7 @@ function parseMatches(list, tournament, players) {
   }
 
   //now do trueskill stuff
+  console.log('loading matches for tournament' + tournament)
   loadMatches(tournament);
 } 
 
