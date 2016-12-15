@@ -1,5 +1,4 @@
 var https = require('https')
-, request = require('then-request')
 , fs   = require('fs')
 , url  = require('url')
 , path = require('path')
