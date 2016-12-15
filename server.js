@@ -21,75 +21,97 @@ var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
 
   switch( uri.pathname ) {
-    case '/':
-      sendFile(res, 'index.html')
-      break
-    case '/index.html':
-      sendFile(res, 'index.html')
-      break
-    case '/style.css':
-      sendFile(res, 'style.css')
-      break
-    case '/player.html':
-      sendFile(res, 'player.html')
-      break
-    case '/players':
-      sendPlayer(res, req)
-      break
-    case '/rankings':
-      sendRankings(res)
-      break
-    default:
-      res.end('404 not found')
+  case '/':
+    sendFile(res, 'index.html')
+    break
+  case '/index.html':
+    sendFile(res, 'index.html')
+    break
+  case '/style.css':
+    sendFile(res, 'style.css')
+    break
+  case '/player.html':
+    sendFile(res, 'player.html')
+    break
+  case '/players':
+    sendPlayer(res, req)
+    break
+  case '/rankings':
+    sendRankings(res)
+    break
+  default:
+    res.end('404 not found')
   }
 })
 
 //SubRoutines
+function doTrueSkill(row) {
+  var stmt = db.prepare("UPDATE players SET score=?, sigscore=?, win=?, loss=? WHERE id=?")
+  db.serialize(function() {
+    var p1 = {}
+    var p2 = {}
 
-function doTrueskill() {
-  db.each("SELECT * FROM matches", function(err, row) {
-    //console.log(row)
-    db.serialize( function() {
-      //console.log(row.p1_id)
-      var p1 = {};
-      var p2 = {};
-
-      p1.rank = 1;
-      p2.rank = 2;
-
-      if (row.p2_score > row.p1_score) {
-        p1.rank = 2;
-        p2.rank = 1;
-      }
-      
-      db.serialize(function() {
-        db.get("SELECT * FROM players WHERE id = ?", row.p1_id, function (err, row1) {
-          p1.skill = [row1.score, row1.sigscore]
-          db.get("SELECT * FROM players WHERE id = ?", row.p2_id, function (err, row2) {
-            p2.skill = [row2.score, row2.sigscore]
-            trueskill.AdjustPlayers([p1,p2])
-            db.serialize(function() {
-              db.run("UPDATE players set score=?, sigscore=? where id=?", p1.skill[0], p1.skill[1], row.p1_id)
-              db.run("UPDATE players set score=?, sigscore=? where id=?", p2.skill[0], p2.skill[1], row.p2_id)
-            })
-          })
-        })
+    db.get("SELECT * FROM players WHERE id = ?", row.p1_id, function (err, row1) {
+      db.get("SELECT * FROM players WHERE id = ?", row.p2_id, function (err, row2) {
+        p1 = {}
+        p1_wins = row1.win;
+        p1_loss = row1.loss;
+        p1.skill = [row1.score , row1.sigscore]
+        
+        p2 = {}
+        p2_wins = row2.win;
+        p2_loss = row2.loss;
+        p2.skill = [row2.score , row2.sigscore]
+        
+        if (row.p2_score > row.p1_score) {
+          p1.rank = 2;
+          p2.rank = 1;
+          p1_loss++;
+          p2_wins++;
+        }
+        else {
+          p1.rank = 1;
+          p2.rank = 2;
+          p2_loss++;
+          p1_wins++;
+        }
+        
+        trueskill.AdjustPlayers([p1,p2])
+        stmt.run(p1.skill[0], p1.skill[1],p1_wins,p1_loss,row.p1_id)
+        stmt.run(p2.skill[0], p2.skill[1],p2_wins,p2_loss,row.p2_id)
+        stmt.finalize()
+        loadNextMatch();
       })
-
     })
   })
 }
 
+var cnt = 0;
+var matchlist;
+function loadNextMatch(list) {
+  if (cnt < matchlist.length) {
+    doTrueSkill(matchlist[cnt]);
+    cnt++;
+  }
+}
+
+function loadMatches() {
+  db.all("SELECT * FROM matches", 
+  function(err, rows) {
+    matchlist = rows;
+    loadNextMatch();
+  })
+}
 function parseMatches(list) {
   //console.log(players)
   for (i = 0; i < list.length; i++) {
     scores = list[i].match.scores_csv.split('-')
     var p1 = players[list[i].match.player1_id]
     var p2 = players[list[i].match.player2_id]
-    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], IDs[0]);
+    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], IDs[IDs.length-1]);
   }
   //now do trueskill stuff
-  doTrueskill();
+  loadMatches();
 } 
 
 function buildMatches(response) {
@@ -103,9 +125,11 @@ function buildMatches(response) {
 }
 
 function getMatches() {
+  console.log(IDs.length)
+  console.log(IDs[0])
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + IDs[0] + '/matches.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + IDs[IDs.length - 1] + '/matches.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
@@ -135,7 +159,7 @@ function buildParticipants(response) {
 function getParticipants() {
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + IDs[0] + '/participants.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + IDs[IDs.length - 1] + '/participants.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
@@ -182,9 +206,9 @@ function sendPlayer(res, req) {
   queryresults = uri.query.split("=")
   playerid=queryresults[1]
   db.get('SELECT * FROM players WHERE id=?', playerid, function(err, row) {
-      console.log(row)
-      console.log(JSON.stringify(row))
-      res.end(JSON.stringify(row))
+    console.log(row)
+    console.log(JSON.stringify(row))
+    res.end(JSON.stringify(row))
   })
 }
 
