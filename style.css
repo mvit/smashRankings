@@ -92,9 +92,21 @@ body {
   font-size: 18px;
 }
 
-.chart {
-  height: 330px;
+.chart div {
+  font: 10px sans-serif;
+  background-color: steelblue;
+  text-align: right;
+  padding: 3px;
+  margin: 1px;
+  color: white;
 }
+
+header {
+  margin-bottom: 20px;
+}
+
+
+
 table {
   width: 100%;
   text-align: left;

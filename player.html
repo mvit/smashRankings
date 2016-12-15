@@ -18,8 +18,8 @@
       <header>
         <h1 id="title">  </h1>
       </header>
-      <section class="chart">
-        <svg id="chart" style="float: right;"\>
+      <section>
+        <div class="chart"> </div>
         <p><span id=score class="big"> </span> - Score <br></p>
         <p><span id=wins class="big"> </span> - Total Wins <br></p>
         <p><span id=losses class="big"> </span> - Total Losses <br></p>
@@ -34,7 +34,7 @@
             <th>Score 1</th>
             <th>Tag 2</th>
             <th>Score 2 </th>
-            <th>Day</th>
+            <th>Tournament id</th>
           </tr>
         </thead>
         <tbody id="match">
@@ -43,9 +43,62 @@
     </section>
     <div id=asdf style='text-align: center;'>
     </div>
-    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="//d3js.org/d3.v3.min.js"></script>
     <script>
 
+    makeGet('/matches');
+    
+    function makeGet(url) {
+      var req = new XMLHttpRequest();
+
+      req.onreadystatechange = function() {
+          handleRes(req);           
+        }
+
+      req.open('GET', url);
+      req.send();
+    }
+    
+    function handleRes(req) {
+      if( req.readyState !== XMLHttpRequest.DONE )
+        return;
+
+      if(req.status === 200)
+        buildList( JSON.parse(req.responseText) );
+    }
+
+    function buildList( A ) {
+      var ranks = document.getElementById('match');
+      var i = 0
+      console.log(A)
+      A.forEach( function(d) {
+        var tr = document.createElement("tr")        
+        tr.innerHTML += '<td>' + d.p1_id + '</td>'
+        tr.innerHTML += '<td>' + d.p1_score + '</td>'
+        tr.innerHTML += '<td>' + d.p2_id + '</td>'
+        tr.innerHTML += '<td>' + d.p2_score + '</td>'
+        tr.innerHTML += '<td>' + d.t_id + '</td>'
+        ranks.appendChild(tr)
+      });
+    }
+
+      var data = [8,9]
+      updateTable(data)
+      function updateTable(data)
+      {
+        
+        var x = d3.scale.linear()
+            .domain([0, d3.max(data)])
+            .range([0, 600]);
+            
+        d3.select(".chart")
+          .selectAll("div")
+            .data(data)
+          .enter().append("div")
+            .style("width", function(d) { return x(d) + "px"; })
+            .text(function(d) { return d; }); 
+
+      }
 
       var getQuery = window.location.search
       //console.log(url)
@@ -85,9 +138,9 @@
 
         el = document.getElementById('losses');
         el.innerHTML = playerinfo.loss
-      }
 
-      var chart = d3.select("chart").style("background-color", "black")
+        updateTable([playerinfo.win, playerinfo.loss]);
+      }      
 
     </script>
     <footer>

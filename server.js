@@ -194,6 +194,15 @@ function sendRankings(res) {
   })
 }
 
+function sendMatches(res) {
+  var uri = url.parse(req.url)
+  queryresults = uri.query.split("=")
+  playerid=queryresults[1]
+  db.all("SELECT * FROM matches WHERE p1_id = ?", playerid, function(err, rows) {
+    res.end(JSON.stringify(rows))
+  })
+}
+
 function sendFile(res, filename) {
   fs.readFile(filename, function(error, content) {
     res.writeHead(200, {'Content-type': 'text/html'})
