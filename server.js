@@ -15,8 +15,8 @@ var challongeHost = 'api.challonge.com'
 , file = "ranks.db"
 
 var IDs = []
-, players = {}
-  
+
+var curtournament = 0;
 var server = http.createServer (function (req, res) {
   var uri = url.parse(req.url)
 
@@ -48,7 +48,8 @@ var server = http.createServer (function (req, res) {
 })
 
 //SubRoutines
-function doTrueSkill(row) {
+function doTrueSkill(list, cnt) {
+  var row = list[cnt]
   var stmt = db.prepare("UPDATE players SET score=?, sigscore=?, win=?, loss=? WHERE id=?")
   db.serialize(function() {
     var p1 = {}
@@ -83,90 +84,94 @@ function doTrueSkill(row) {
         stmt.run(p1.skill[0], p1.skill[1],p1_wins,p1_loss,row.p1_id)
         stmt.run(p2.skill[0], p2.skill[1],p2_wins,p2_loss,row.p2_id)
         stmt.finalize()
-        loadNextMatch();
+        loadNextMatch(list, cnt + 1);
       })
     })
   })
 }
 
-var cnt = 0;
-var matchlist;
-function loadNextMatch(list) {
-  if (cnt < matchlist.length) {
-    doTrueSkill(matchlist[cnt]);
-    cnt++;
+function loadNextMatch(list, cnt) {
+  if (cnt < Object.keys(list).length) {
+    doTrueSkill(list, cnt);
   }
 }
 
-function loadMatches() {
-  db.all("SELECT * FROM matches", 
-  function(err, rows) {
-    matchlist = rows;
-    loadNextMatch();
+function loadMatches(tournament) {
+  db.all("SELECT * FROM matches WHERE t_id = ?"
+  , tournament, function(err, rows) {
+    console.log(rows)
+    loadNextMatch(rows, 0)
   })
 }
-function parseMatches(list) {
-  //console.log(players)
+function parseMatches(list, tournament, players) {
+
+  var stmt = db.prepare("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)")
   for (i = 0; i < list.length; i++) {
     scores = list[i].match.scores_csv.split('-')
     var p1 = players[list[i].match.player1_id]
     var p2 = players[list[i].match.player2_id]
-    db.run("INSERT INTO matches VALUES (?, ?, ?, ?, ?, ?)",list[i].match.id, p1, p2, scores[0], scores[1], IDs[IDs.length-1]);
+    stmt.run(list[i].match.id, p1, p2, scores[0], scores[1], tournament);
   }
+
   //now do trueskill stuff
-  loadMatches();
+  loadMatches(tournament);
 } 
 
-function buildMatches(response) {
+function buildMatches(response, tournament, players) {
   var str = '';  
   response.on('data', function (chunk) {
     str += chunk;
   });
   response.on('end', function(chunk) {
-    parseMatches(JSON.parse(str));
+    parseMatches(JSON.parse(str), tournament, players);
   });
 }
 
-function getMatches() {
-  console.log(IDs.length)
-  console.log(IDs[0])
+function getMatches(tournament, players) {
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + IDs[IDs.length - 1] + '/matches.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + tournament + '/matches.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
-  https.get(options, buildMatches)
+  https.get(options, function(res) {
+    buildMatches(res, tournament, players);
+  }).end();
 }
 
-function parseParticipants(list) {
-  players = {}
+function parseParticipants(list, tournament) {
+  var players = {}
   for (i = 0; i < list.length; i++) {
     var id = uuidV4();
+    if(list[i].participant.group_player_ids[0] != undefined) {
+      players[list[i].participant.group_player_ids[0]] = id;
+    }
     players[list[i].participant.id] = id;
-    //console.log(list[i].participant.id + ',' + id)
     db.run("INSERT INTO players VALUES (?, ?, ?, ?, ?, ?)", id, list[i].participant.name, 0, 0, 25.0, 25.0/3.0);
   }
+  getMatches(tournament, players);
 }
 
-function buildParticipants(response) {
+function buildParticipants(response, tournament) {
   var str = '';
   response.on('data', function (chunk) {
     str += chunk;
   });
   response.on('end', function(chunk) {
-    parseParticipants(JSON.parse(str));
+    parseParticipants(JSON.parse(str), tournament);
   });
 }
 
-function getParticipants() {
+function getParticipants(tournament) {
   var options = {
     host: challongeHost,
-    path: '/v1/tournaments/' + IDs[IDs.length - 1] + '/participants.json?api_key=' + APIKey,
+    path: '/v1/tournaments/' + tournament + '/participants.json?api_key=' + APIKey,
     port: '443',
     method: 'GET'
   };
-  https.get(options, buildParticipants).end();
+  https.get(options, function(res) {
+    buildParticipants(res, tournament);
+  }).end();
 }
 
 function parseTournaments(tournaments){
@@ -180,8 +185,9 @@ function parseTournaments(tournaments){
       }
     }
   }
-  getParticipants();
-  getMatches();
+  for (var i = 0; i < IDs.length; i++) {
+    getParticipants(IDs[i])
+  }
 }
 
 function buildTournaments(response) {
@@ -225,7 +231,7 @@ function sendMatches(res, req) {
   playerid=queryresults[1]
   db.all("SELECT * FROM matches WHERE p1_id = ?"
   , playerid, function(err, rows) {
-    matches = JSON.stringify(rows)
+    res.end(JSON.stringify(rows))
   })
 }
 
@@ -234,6 +240,11 @@ function sendFile(res, filename) {
     res.writeHead(200, {'Content-type': 'text/html'})
     res.end(content, 'utf-8')
   })
+}
+
+function getTag(uuid) {
+  
+  return tag
 }
 
 //Build the database
@@ -263,7 +274,7 @@ if (!exists) {
         p2_id TEXT NOT NULL, \
         p1_score INT(4),\
         p2_score INT(4),\
-        t_id int(4),\
+        t_id INT,\
         PRIMARY KEY(id))")
       })
 
