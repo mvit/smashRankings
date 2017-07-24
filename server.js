@@ -9,7 +9,7 @@ var https = require('https')
 , sqlite3 = require('sqlite3').verbose()
 
 var challongeHost = 'api.challonge.com'
-, APIKey = '2aXYxGwZxmCd16gzgwBEja8QFtR0xd4bR7yCykg8'
+, APIKey = ''
 , port = 8080
 , file = "ranks.db"
 
